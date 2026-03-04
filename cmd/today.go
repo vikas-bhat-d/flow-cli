@@ -31,7 +31,7 @@ var todayCmd = &cobra.Command{
 		for _, h := range data.Habits {
 
 			status := "[ ]"
-			if h.DoneToday {
+			if h.TaskCount > 0 {
 				status = "[x]"
 			}
 

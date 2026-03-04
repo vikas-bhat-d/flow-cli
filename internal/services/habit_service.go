@@ -11,7 +11,7 @@ type HabitView struct {
 	ID            int
 	Name          string
 	CurrentStreak int
-	DoneToday     bool
+	TaskCount     int
 }
 
 func AddHabit(name string) error {
@@ -79,12 +79,14 @@ func ListHabits() ([]HabitView, error) {
 
 	for _, h := range state.Habits {
 
-		doneToday := false
+		count := 0
 
-		for _, log := range state.HabitLogs {
-			if log.HabitID == h.ID && log.Date == today {
-				doneToday = true
-				break
+		for _, t := range state.Tasks {
+			if t.HabitID == h.ID &&
+				t.Done &&
+				t.DoneDate == today {
+
+				count++
 			}
 		}
 
@@ -92,7 +94,7 @@ func ListHabits() ([]HabitView, error) {
 			ID:            h.ID,
 			Name:          h.Name,
 			CurrentStreak: h.CurrentStreak,
-			DoneToday:     doneToday,
+			TaskCount:     count,
 		})
 	}
 

@@ -35,16 +35,12 @@ var habitListCmd = &cobra.Command{
 
 		for _, h := range habits {
 
-			status := "[ ]"
-			if h.DoneToday {
-				status = "[x]"
-			}
-
-			fmt.Printf("%s [%d] %s 🔥 %d\n",
-				status,
+			fmt.Printf(
+				"[%d] %s 🔥 %d (%d tasks today)\n",
 				h.ID,
 				h.Name,
 				h.CurrentStreak,
+				h.TaskCount,
 			)
 		}
 	},
