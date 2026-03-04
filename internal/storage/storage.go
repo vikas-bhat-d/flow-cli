@@ -2,14 +2,12 @@ package storage
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"path/filepath"
 )
 
 func getStatePath() string {
 	home, _ := os.UserHomeDir()
-	fmt.Println(home)
 	return filepath.Join(home, ".flow", "state.json")
 }
 
