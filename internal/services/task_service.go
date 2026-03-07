@@ -7,18 +7,37 @@ import (
 	"github.com/vikas-bhat-d/flow-cli/internal/storage"
 )
 
-func AddTask(title string, habitID int) error {
+func AddTask(
+	title string,
+	habitID int,
+	scheduledFor string,
+	deadline string,
+	estimate int,
+) error {
 
 	state, err := storage.LoadState()
 	if err != nil {
 		return err
 	}
 
+	now := time.Now()
+
+	created := now.Format("2006-01-02")
+
+	if scheduledFor == "" {
+		scheduledFor = created
+	}
+
 	task := models.Task{
-		ID:      len(state.Tasks) + 1,
-		Title:   title,
-		HabitID: habitID,
-		Done:    false,
+		ID:           len(state.Tasks) + 1,
+		Title:        title,
+		HabitID:      habitID,
+		Done:         false,
+		CreatedAt:    created,
+		ScheduledFor: scheduledFor,
+		Deadline:     deadline,
+		Estimate:     estimate,
+		Spent:        0,
 	}
 
 	state.Tasks = append(state.Tasks, task)
@@ -27,22 +46,48 @@ func AddTask(title string, habitID int) error {
 }
 
 type TaskView struct {
-	ID        int
-	Title     string
-	Done      bool
-	HabitName string
+	ID           int
+	Title        string
+	Done         bool
+	HabitName    string
+	ScheduledFor string
+	Deadline     string
+	Estimate     int
+	Spent        int
 }
 
-func ListTasks() ([]TaskView, error) {
+func ListTasks(today bool, date string, pending bool, done bool) ([]TaskView, error) {
 
 	state, err := storage.LoadState()
 	if err != nil {
 		return nil, err
 	}
 
+	todayDate := time.Now().Format("2006-01-02")
+
 	var tasks []TaskView
 
 	for _, t := range state.Tasks {
+
+		// Filter: today
+		if today && t.ScheduledFor != todayDate {
+			continue
+		}
+
+		// Filter: date
+		if date != "" && t.ScheduledFor != date {
+			continue
+		}
+
+		// Filter: pending
+		if pending && t.Done {
+			continue
+		}
+
+		// Filter: done
+		if done && !t.Done {
+			continue
+		}
 
 		habitName := ""
 
@@ -56,10 +101,13 @@ func ListTasks() ([]TaskView, error) {
 		}
 
 		tasks = append(tasks, TaskView{
-			ID:        t.ID,
-			Title:     t.Title,
-			Done:      t.Done,
-			HabitName: habitName,
+			ID:           t.ID,
+			Title:        t.Title,
+			Done:         t.Done,
+			HabitName:    habitName,
+			ScheduledFor: t.ScheduledFor,
+			Estimate:     t.Estimate,
+			Spent:        t.Spent,
 		})
 	}
 
@@ -86,7 +134,6 @@ func updateHabitProgress(state *storage.State, habitID int) {
 
 		if state.Habits[i].ID == habitID {
 
-			// if at least one task today → habit is active
 			if count == 1 {
 
 				state.Habits[i].CurrentStreak++
@@ -125,6 +172,37 @@ func CompleteTask(id int) error {
 
 			if habitID != 0 {
 				updateHabitProgress(state, habitID)
+			}
+
+			break
+		}
+	}
+
+	return storage.SaveState(state)
+}
+
+func AddFocusTime(taskID int, minutes int) error {
+
+	state, err := storage.LoadState()
+	if err != nil {
+		return err
+	}
+
+	for i := range state.Tasks {
+
+		if state.Tasks[i].ID == taskID {
+
+			state.Tasks[i].Spent += minutes
+
+			if state.Tasks[i].Estimate > 0 &&
+				state.Tasks[i].Spent >= state.Tasks[i].Estimate {
+
+				state.Tasks[i].Done = true
+				state.Tasks[i].DoneDate = time.Now().Format("2006-01-02")
+
+				if state.Tasks[i].HabitID != 0 {
+					updateHabitProgress(state, state.Tasks[i].HabitID)
+				}
 			}
 
 			break

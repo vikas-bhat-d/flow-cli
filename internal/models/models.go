@@ -13,11 +13,20 @@ type Habit struct {
 }
 
 type Task struct {
-	ID       int    `json:"id"`
-	Title    string `json:"title"`
-	HabitID  int    `json:"habit_id,omitempty"`
+	ID      int    `json:"id"`
+	Title   string `json:"title"`
+	HabitID int    `json:"habit_id,omitempty"`
+
 	Done     bool   `json:"done"`
 	DoneDate string `json:"done_date,omitempty"`
+
+	CreatedAt    string `json:"created_at"`
+	ScheduledFor string `json:"scheduled_for,omitempty"`
+
+	Deadline string `json:"deadline,omitempty"`
+
+	Estimate int `json:"estimate,omitempty"`
+	Spent    int `json:"spent,omitempty"`
 }
 
 type Session struct {
